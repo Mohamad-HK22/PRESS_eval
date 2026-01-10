@@ -10,13 +10,19 @@ from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()  # this will read .env and set the env vars
 
-# --------- System prompt template for the model --------- #
+# --------- Domain prompts template for the model --------- #
 
-def load_press_system_prompt(path: Path = Path("press_system_prompt.txt")) -> str:
-    """Load the PRESS system prompt from an external text file."""
+def load_prompt(path: str | Path) -> str:
+    """Load the PRESS prompt from an external text file."""
+    path = Path(path)
     return path.read_text(encoding="utf-8")
 
-PRESS_SYSTEM_PROMPT = load_press_system_prompt()
+trns_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/1_trns_prompt.txt")
+bool_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/2_bool_prompt.txt")
+subj_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/3_subj_prompt.txt")
+text_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/4_text_prompt.txt")
+synt_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/5_synt_prompt.txt")
+limt_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/6_limt_prompt.txt")
 
 # --------- Data structures --------- #
 
@@ -33,47 +39,45 @@ class SearchStrategy:
     text: str
 
 @dataclass
+class PressDomainQuestionResult:
+    """Boolean answer to a single checklist question within a PRESS domain."""
+    question: str   # exact question text
+    answer: bool    # True or False
+
+
+@dataclass
 class PressDomainResult:
     """
     Result for a single PRESS 2015 domain
     (e.g., Boolean/proximity operators, subject headings).
     """
-    domain: str              # machine-friendly name of the domain
-    passed: bool             # True if this domain is judged adequate
-    issues: List[str]        # short descriptions of problems found
-    severity: str            # e.g., "none", "minor", "major"
-
-
-@dataclass
-class PressReviewResult:
-    """
-    Overall PRESS review result for one database search strategy.
-    """
-    strategy_database: str             # e.g., "PubMed"
-    overall_pass: bool                 # overall adequacy of the strategy
-    overall_reason: str                # short narrative justification
-    domains: List[PressDomainResult]   # per-domain results
-
+    domain: str                               # e.g., "boolean_proximity"
+    questions: List[PressDomainQuestionResult]
+    justification: str                        # one narrative paragraph for the domain
 
 # --------- Core stub  --------- #
 
 def review_strategy_with_press(
     review_info: SystematicReviewInfo,
     strategy: SearchStrategy,
+    system_prompt: str,
     model: str = "gpt-4o-mini",
-) -> PressReviewResult:
+) -> PressDomainResult:
     """
-    Call the OpenAI Chat Completions API to perform a PRESS 2015 review.
+    Generic helper to review a single PRESS 2015 domain.
 
-    - Uses the global PRESS_SYSTEM_PROMPT (loaded from the external file).
+    - You pass in the domain-specific system prompt (e.g. trns_prompt, bool_prompt, ...).
     - Builds chat messages from the systematic review info and search strategy.
-    - Expects the model to return a single JSON object matching the PressReviewResult schema.
+    - Expects the model to return a JSON object with keys:
+        - "domain": string
+        - "questions": list of { "question": string, "answer": boolean }
+        - "justification": string
     - Requires OPENAI_API_KEY to be set in the environment, unless you pass a key
       when constructing the OpenAI client yourself.
     """
     client = OpenAI()  # reads OPENAI_API_KEY from environment by default
 
-    messages = build_press_messages(review_info, strategy, PRESS_SYSTEM_PROMPT)
+    messages = build_press_messages(review_info, strategy, system_prompt)
 
     completion = client.chat.completions.create(
         model=model,
@@ -81,7 +85,7 @@ def review_strategy_with_press(
         temperature=0,
     )
 
-    content = completion.choices[0].message.content
+    content = completion.choices[0].message.content or ""
     try:
         data = json.loads(content)
     except json.JSONDecodeError as exc:
@@ -90,7 +94,7 @@ def review_strategy_with_press(
             f"{content}"
         ) from exc
 
-    return _dict_to_press_review_result(data)
+    return _dict_to_press_domain_result(data)
 
 
 # --------- File loading helpers --------- #
@@ -131,58 +135,36 @@ def build_press_messages(
         {"role": "user", "content": user_content},
     ]
 
-def _dict_to_press_review_result(data: Dict[str, Any]) -> "PressReviewResult":
-    """Convert a JSON-like dict from the model into PressReviewResult objects."""
-    domain_dicts = data.get("domains", []) or []
-    domains: List[PressDomainResult] = [
-        PressDomainResult(
-            domain=d["domain"],
-            passed=bool(d["passed"]),
-            issues=list(d.get("issues", [])),
-            severity=d["severity"],
+def _dict_to_press_domain_result(data: Dict[str, Any]) -> PressDomainResult:
+    """Convert a JSON-like dict from the model into a PressDomainResult."""
+    questions_data = data.get("questions", []) or []
+    questions: List[PressDomainQuestionResult] = [
+        PressDomainQuestionResult(
+            question=q["question"],
+            answer=bool(q["answer"]),
         )
-        for d in domain_dicts
+        for q in questions_data
     ]
 
-    return PressReviewResult(
-        strategy_database=data["strategy_database"],
-        overall_pass=bool(data["overall_pass"]),
-        overall_reason=data["overall_reason"],
-        domains=domains,
+    return PressDomainResult(
+        domain=data["domain"],
+        questions=questions,
+        justification=data.get("justification", ""),
     )
 
-def press_review_to_dict(result: PressReviewResult) -> Dict[str, Any]:
-    """Convert a PressReviewResult into a plain JSON-serializable dict."""
-    return {
-        "strategy_database": result.strategy_database,
-        "overall_pass": result.overall_pass,
-        "overall_reason": result.overall_reason,
-        "domains": [
-            {
-                "domain": d.domain,
-                "passed": d.passed,
-                "issues": "; ".join(d.issues),
-                "severity": d.severity,
-            }
-            for d in result.domains
-        ],
-    }
 
-def press_review_to_dict(result: PressReviewResult) -> Dict[str, Any]:
-    """Convert a PressReviewResult into a plain JSON-serializable dict."""
+def press_domain_to_dict(result: PressDomainResult) -> Dict[str, Any]:
+    """Convert a PressDomainResult into a plain JSON-serializable dict."""
     return {
-        "strategy_database": result.strategy_database,
-        "overall_pass": result.overall_pass,
-        "overall_reason": result.overall_reason,
-        "domains": [
+        "domain": result.domain,
+        "questions": [
             {
-                "domain": d.domain,
-                "passed": d.passed,
-                "issues": "; ".join(d.issues),
-                "severity": d.severity,
+                "question": q.question,
+                "answer": q.answer,
             }
-            for d in result.domains
+            for q in result.questions
         ],
+        "justification": result.justification,
     }
 
 # --------- demo --------- #
@@ -194,32 +176,24 @@ def main() -> None:
     review_info = load_systematic_review_info(ss_info_path)
     search_strategy = load_search_strategy(ss_strategy_path, database_name="PubMed")
 
-    # print("=== Systematic Review Info (JSON) ===")
-    # pprint(review_info.data)
-
-    # print("\n=== Search Strategy (PubMed) ===")
-    # print(search_strategy.text)
-
-    # # Build example messages for the model
-    # messages = build_press_messages(review_info, search_strategy, PRESS_SYSTEM_PROMPT)
-
-    # print("\n=== Example user message to send to the model ===")
-    # print(messages[1]["content"])
-
     try:
-        press_result = review_strategy_with_press(review_info, search_strategy)
+        # Evaluate only the first domain: translation of the research question
+        trns_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=trns_prompt,
+        )
     except Exception as e:
-        print("\n[ERROR] PRESS review failed:")
+        print("\n[ERROR] Translation domain PRESS review failed:")
         print(e)
     else:
-        review_dict = press_review_to_dict(press_result)
+        trns_dict = press_domain_to_dict(trns_result)
 
-        output_path = Path("output.json")
-
+        output_path = Path("translation_output.json")
         with output_path.open("w", encoding="utf-8") as f:
-            json.dump(review_dict, f, indent=2, ensure_ascii=False)
+            json.dump(trns_dict, f, indent=2, ensure_ascii=False)
 
-        print(f"\nSaved PRESS review to: {output_path}")
+        print(f"\nSaved translation PRESS review to: {output_path}")
 
 
 if __name__ == "__main__":

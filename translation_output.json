@@ -1,0 +1,30 @@
+{
+  "domain": "translation",
+  "questions": [
+    {
+      "question": "Does the search strategy match the research question/PICO?",
+      "answer": false
+    },
+    {
+      "question": "Are the search concepts clear?",
+      "answer": false
+    },
+    {
+      "question": "Are there too many or too few PICO elements included?",
+      "answer": false
+    },
+    {
+      "question": "Are the search concepts too narrow or too broad?",
+      "answer": true
+    },
+    {
+      "question": "Does the search retrieve too many or too few records?",
+      "answer": false
+    },
+    {
+      "question": "Are unconventional or complex strategies explained?",
+      "answer": false
+    }
+  ],
+  "justification": "The search strategy does not adequately match the research question as it lacks a clear focus on the specific outcomes of falls, fractures, and mortality in the context of vitamin D supplementation. The concepts are overly broad, leading to potential retrieval of irrelevant records. Additionally, the complexity of the strategy is not well explained, which may hinder reproducibility and clarity."
+}
