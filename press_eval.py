@@ -183,18 +183,60 @@ def main() -> None:
             strategy=search_strategy,
             system_prompt=trns_prompt,
         )
+        bool_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=bool_prompt,
+        )
+        subj_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=subj_prompt,
+        )
+        text_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=text_prompt,
+        )
+        synt_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=synt_prompt,
+        )
+        limt_result = review_strategy_with_press(
+            review_info=review_info,
+            strategy=search_strategy,
+            system_prompt=limt_prompt,
+        )
     except Exception as e:
         print("\n[ERROR] Translation domain PRESS review failed:")
         print(e)
     else:
         trns_dict = press_domain_to_dict(trns_result)
+        bool_dict = press_domain_to_dict(bool_result)
+        subj_dict = press_domain_to_dict(subj_result)
+        text_dict = press_domain_to_dict(text_result)
+        synt_dict = press_domain_to_dict(synt_result)
+        limt_dict = press_domain_to_dict(limt_result)
 
-        output_path = Path("translation_output.json")
+        # Combine all domain results into one JSON structure
+        combined_result = {
+            "strategy_database": search_strategy.database,
+            "domains": [
+                trns_dict,
+                bool_dict,
+                subj_dict,
+                text_dict,
+                synt_dict,
+                limt_dict,
+            ],
+        }
+
+        output_path = Path("press_review_output.json")
         with output_path.open("w", encoding="utf-8") as f:
-            json.dump(trns_dict, f, indent=2, ensure_ascii=False)
+            json.dump(combined_result, f, indent=2, ensure_ascii=False)
 
-        print(f"\nSaved translation PRESS review to: {output_path}")
-
+        print(f"\nSaved PRESS review to: {output_path}")
 
 if __name__ == "__main__":
     main()
