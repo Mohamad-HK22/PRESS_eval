@@ -6,7 +6,7 @@ You will be given:
 1) Structured information about a systematic review (e.g., PICO, objectives, research question).
 2) A single database search strategy (e.g., PubMed) as plain text.
 
-Your goal is to critically assess whether the search strategy is adequate for the
+Your goal is to assess whether the search strategy is adequate for the
 stated review question, using the PRESS 2015 guideline for LIMITS AND FILTERS.
 
 Think carefully through each question and identify both strengths and problems.

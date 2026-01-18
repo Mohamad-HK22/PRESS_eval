@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -30,6 +30,51 @@ limt_prompt = load_prompt("/Users/mohamad22/Desktop/PRESS_eval/prompts/6_limt_pr
 class SystematicReviewInfo:
     """Holds the raw JSON metadata about the systematic review (PICO, objective, etc.)."""
     data: Dict[str, Any]
+
+    @classmethod
+    def from_json_file(cls, path: Path) -> "SystematicReviewInfo":
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return cls(data=data)
+
+    # ---- Convenience accessors (read-only) ----
+    @property
+    def search_data(self) -> Dict[str, Any]:
+        return self.data["search_data"]
+
+    @property
+    def strategy(self) -> Dict[str, Any]:
+        return self.search_data["search_strategy_data"]
+
+    @property
+    def min_year(self) -> Optional[int]:
+        return self.search_data.get("min_year")  # safe if missing
+
+    @property
+    def max_year(self) -> Optional[int]:
+        return self.search_data.get("max_year")
+
+    @property
+    def concepts(self) -> List[Any]:
+        return self.strategy.get("concepts", [])
+
+    @property
+    def connected_concepts(self) -> List[Any]:
+        return self.strategy.get("connected_concepts", [])
+
+    @property
+    def connected_keywords(self) -> List[Any]:
+        return self.strategy.get("connected_keywords", [])
+
+    @property
+    def objective(self) -> Optional[str]:
+        return self.strategy.get("objective")
+
+    @property
+    def pico(self) -> Dict[str, Any]:
+        return self.strategy.get("pico_elements", {})
+    
+    def __str__(self) -> str:
+        return str(self.data)
 
 
 @dataclass
@@ -167,6 +212,26 @@ def press_domain_to_dict(result: PressDomainResult) -> Dict[str, Any]:
         "justification": result.justification,
     }
 
+
+JSONType = Union[dict, list, str, int, float, bool, None]
+
+def combine_to_json_file(parts: Dict[str, JSONType], out_path: str = "PRESS_review.json", *, indent: int = 2) -> Path:
+    """
+    parts example:
+      {
+        "pico": {...},
+        "objective": "....",
+        "min_year": 2010
+      }
+    Saves them into a single JSON file and returns the file path.
+    """
+    out_file = Path(out_path)
+    out_file.write_text(
+        json.dumps(parts, indent=indent, ensure_ascii=False),
+        encoding="utf-8"
+    )
+    return out_file
+
 # --------- demo --------- #
 
 def main() -> None:
@@ -177,29 +242,29 @@ def main() -> None:
     search_strategy = load_search_strategy(ss_strategy_path, database_name="PubMed")
 
     try:
-        # Evaluate only the first domain: translation of the research question
+        # Evaluate domain by domain
         trns_result = review_strategy_with_press(
-            review_info=review_info,
+            review_info=SystematicReviewInfo(data={"objective":review_info.objective, "pico":review_info.pico, "concepts":review_info.concepts, "connected_concepts":review_info.connected_concepts}),
             strategy=search_strategy,
             system_prompt=trns_prompt,
         )
         bool_result = review_strategy_with_press(
-            review_info=review_info,
+            review_info=SystematicReviewInfo(data={"objective": review_info.objective, "pico": review_info.pico}),
             strategy=search_strategy,
             system_prompt=bool_prompt,
         )
         subj_result = review_strategy_with_press(
-            review_info=review_info,
+            review_info=SystematicReviewInfo(data={"objective":review_info.objective, "pico":review_info.pico, "concepts":review_info.concepts}),
             strategy=search_strategy,
             system_prompt=subj_prompt,
         )
         text_result = review_strategy_with_press(
-            review_info=review_info,
+            review_info=SystematicReviewInfo(data={"objective":review_info.objective, "pico":review_info.pico, "concepts":review_info.concepts, "connected_keywords":review_info.connected_keywords}),
             strategy=search_strategy,
             system_prompt=text_prompt,
         )
         synt_result = review_strategy_with_press(
-            review_info=review_info,
+            review_info=SystematicReviewInfo(data={"concepts":review_info.concepts, "connected_concepts":review_info.connected_concepts}),
             strategy=search_strategy,
             system_prompt=synt_prompt,
         )
@@ -209,7 +274,7 @@ def main() -> None:
             system_prompt=limt_prompt,
         )
     except Exception as e:
-        print("\n[ERROR] Translation domain PRESS review failed:")
+        print("\n[ERROR] PRESS review failed:")
         print(e)
     else:
         trns_dict = press_domain_to_dict(trns_result)
@@ -232,10 +297,7 @@ def main() -> None:
             ],
         }
 
-        output_path = Path("press_review_output.json")
-        with output_path.open("w", encoding="utf-8") as f:
-            json.dump(combined_result, f, indent=2, ensure_ascii=False)
-
+        output_path = combine_to_json_file(combined_result, "press_review_output3.json")
         print(f"\nSaved PRESS review to: {output_path}")
 
 if __name__ == "__main__":

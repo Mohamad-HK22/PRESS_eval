@@ -1,0 +1,181 @@
+{
+  "strategy_database": "PubMed",
+  "domains": [
+    {
+      "domain": "translation",
+      "questions": [
+        {
+          "question": "Does the search strategy match the research question/PICO?",
+          "answer": false
+        },
+        {
+          "question": "Are the search concepts clear?",
+          "answer": false
+        },
+        {
+          "question": "Are there too many or too few PICO elements included?",
+          "answer": true
+        },
+        {
+          "question": "Are the search concepts too narrow or too broad?",
+          "answer": true
+        },
+        {
+          "question": "Does the search retrieve too many or too few records?",
+          "answer": false
+        },
+        {
+          "question": "Are unconventional or complex strategies explained?",
+          "answer": false
+        }
+      ],
+      "justification": "The search strategy does not adequately match the PICO elements, particularly in its focus on population and outcomes, leading to unclear concepts. It includes excessive terms related to the population, making it overly broad, while the intervention and outcomes are not sufficiently targeted. The search retrieves an overwhelming number of records, indicating a lack of specificity, and there is no explanation of any unconventional strategies used."
+    },
+    {
+      "domain": "boolean_proximity",
+      "questions": [
+        {
+          "question": "Are Boolean or proximity operators used correctly?",
+          "answer": false
+        },
+        {
+          "question": "Is the use of nesting with brackets appropriate and effective for the search?",
+          "answer": false
+        },
+        {
+          "question": "If NOT is used, is this likely to result in any unintended exclusions?",
+          "answer": false
+        },
+        {
+          "question": "Could precision be improved by using proximity operators (eg, adjacent, near, within) or phrase searching instead of AND?",
+          "answer": true
+        },
+        {
+          "question": "Is the width of proximity operators suitable (eg, might adj5 pick up more variants than adj2)?",
+          "answer": false
+        }
+      ],
+      "justification": "The search strategy contains excessive use of OR operators and poorly structured nesting, leading to a lack of clarity and potential retrieval of irrelevant results. The absence of effective proximity operators and phrase searching diminishes precision, while the overall complexity may result in missed relevant studies due to the overwhelming number of terms and combinations used."
+    },
+    {
+      "domain": "subject_headings",
+      "questions": [
+        {
+          "question": "Are the subject headings relevant?",
+          "answer": false
+        },
+        {
+          "question": "Are any relevant subject headings missing; for example, previous index terms?",
+          "answer": true
+        },
+        {
+          "question": "Are any subject headings too broad or too narrow?",
+          "answer": true
+        },
+        {
+          "question": "Are subject headings exploded where necessary and vice versa?",
+          "answer": false
+        },
+        {
+          "question": "Are major headings (“starring” or restrict to focus) used? If so, is there adequate justification?",
+          "answer": false
+        },
+        {
+          "question": "Are subheadings missing?",
+          "answer": true
+        },
+        {
+          "question": "Are subheadings attached to subject headings? (Floating subheadings may be preferred.)",
+          "answer": false
+        },
+        {
+          "question": "Are floating subheadings relevant and used appropriately?",
+          "answer": false
+        },
+        {
+          "question": "Are both subject headings and terms in free text used for each concept?",
+          "answer": true
+        }
+      ],
+      "justification": "The search strategy includes a large number of subject headings, but many are irrelevant or overly broad, leading to potential retrieval of unrelated studies. Additionally, there are missing relevant subject headings, particularly for specific outcomes like falls and fractures. The use of subheadings is inadequate, and there is a lack of appropriate floating subheadings. Overall, the strategy needs refinement to better align with the review's objectives."
+    },
+    {
+      "domain": "text_words",
+      "questions": [
+        {
+          "question": "Does the search include all spelling variants in free text (eg, UK vs. US spelling)?",
+          "answer": false
+        },
+        {
+          "question": "Does the search include all synonyms or antonyms (eg, opposites)?",
+          "answer": true
+        },
+        {
+          "question": "Does the search capture relevant truncation (ie, is truncation at the correct place)?",
+          "answer": true
+        },
+        {
+          "question": "Is the truncation too broad or too narrow?",
+          "answer": false
+        },
+        {
+          "question": "Are acronyms or abbreviations used appropriately? Do they capture irrelevant material? Are the full terms also included?",
+          "answer": true
+        },
+        {
+          "question": "Are the keywords specific enough or too broad? Are too many or too few keywords used? Are stop words used?",
+          "answer": false
+        },
+        {
+          "question": "Have the appropriate fields been searched; for example, is the choice of the text word fields (.tw.) or all fields (.af.) appropriate? Are there any other fields to be included or excluded (database specific)?",
+          "answer": true
+        },
+        {
+          "question": "Should any long strings be broken into several shorter search statements?",
+          "answer": true
+        }
+      ],
+      "justification": "The search strategy is comprehensive in terms of synonyms and includes appropriate truncation, but it lacks consideration for UK vs. US spelling variations and may be overly broad in some areas, leading to potential irrelevant results. Additionally, the use of too many keywords without clear specificity could dilute the search results."
+    },
+    {
+      "domain": "spelling_syntax",
+      "questions": [
+        {
+          "question": "Are there any spelling errors?",
+          "answer": true
+        },
+        {
+          "question": "Are there any errors in system syntax; for example, the use of a truncation symbol from a different search interface?",
+          "answer": false
+        },
+        {
+          "question": "Are there incorrect line combinations or orphan lines?",
+          "answer": true
+        }
+      ],
+      "justification": "The search strategy contains several spelling errors, such as 'elderlies', 'maturate', 'fractur', and 'injurie', which could affect the retrieval of relevant literature. Additionally, there are orphan lines and incorrect combinations, particularly with the use of 'AND' and 'OR' operators, which may lead to incomplete or irrelevant search results."
+    },
+    {
+      "domain": "limits_filters",
+      "questions": [
+        {
+          "question": "Are all limits and filters used appropriately and are they relevant given the research question?",
+          "answer": false
+        },
+        {
+          "question": "Are all limits and filters used appropriately and are they relevant for the database?",
+          "answer": false
+        },
+        {
+          "question": "Are any potentially helpful limits or filters missing? Are the limits or filters too broad or too narrow? Can any limits or filters be added or taken away?",
+          "answer": true
+        },
+        {
+          "question": "Are sources cited for the filters used?",
+          "answer": false
+        }
+      ],
+      "justification": "The search strategy lacks appropriate limits and filters relevant to the research question, such as publication type (e.g., systematic reviews, RCTs) and language restrictions. Additionally, the filters used are overly broad, which may lead to irrelevant results. There are no citations provided for the filters, which is essential for transparency and reproducibility."
+    }
+  ]
+}
